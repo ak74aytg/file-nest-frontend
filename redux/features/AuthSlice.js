@@ -20,6 +20,36 @@ export const loginUser = createAsyncThunk("auth/loginUser",
 
 
 
+// Thunk for register users
+export const registerUser = createAsyncThunk("auth/registerUser",
+async(registerData, {isRejectedWithValue})=>{
+  try{
+    const response = await axios.post(
+      `${baseUrl}/auth/v1/register`,
+      registerData
+    );
+    return response.data;
+  }catch(error){
+    return isRejectedWithValue(error.response.data)
+  }
+}
+);
+
+
+//Thunk for verifying user
+export const verifyUser = createAsyncThunk("auth/verifyUser", async(verifyData, {isRejectedWithValue})=>{
+  try{
+    const response = await axios.post(
+      `${baseUrl}/auth/v1/verify-otp?email=${verifyData.email}&otp=${verifyData.otp}`
+    );
+    return response.data;
+  }catch(error){
+    return isRejectedWithValue(error.response.data);
+  }
+})
+
+
+
 
 const authSlice = createSlice({
   name: "auth",
@@ -37,6 +67,7 @@ const authSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+          //login reducers
           .addCase(loginUser.pending, (state) => {
             state.loading = true;
             state.error = null;
@@ -47,6 +78,29 @@ const authSlice = createSlice({
             state.token = action.payload.token;
           })
           .addCase(loginUser.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+          })
+          //register reducers
+          .addCase(registerUser.pending, (state)=>{
+            state.loading = true;
+            state.error = null;
+          }).addCase(registerUser.fulfilled, (state, action)=>{
+            state.loading = false;
+            state.user = action.payload.email;
+          }).addCase(registerUser.rejected, (state, action)=>{
+            state.loading = false;
+            state.error = action.payload;
+          })
+          //verify user reducers
+          .addCase(verifyUser.pending, (state)=>{
+            state.loading = true;
+            state.error = null;
+          }).addCase(verifyUser.fulfilled, (state, action)=>{
+            state.loading = false;
+            state.user = action.payload.username;
+            state.token = action.payload.token;
+          }).addCase(verifyUser.rejected, (state, action)=>{
             state.loading = false;
             state.error = action.payload;
           });

@@ -1,32 +1,36 @@
 // screens/SignupScreen.js
 import React from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { useForm, Controller } from "react-hook-form";
-import axios from "axios";
 import { styled } from "nativewind";
-import { useNavigation } from "@react-navigation/native";
+import { UseDispatch, useSelector } from "react-redux";
+import { registerUser } from "../../redux/features/AuthSlice";
+import { useDispatch } from "react-redux";
 
 
 const StyledView = styled(View);
 
 export default function RegisterScreen({ navigation }) {
   const { control, handleSubmit } = useForm();
+  const dispatch = useDispatch();
+  const {error, loading} = useSelector((state)=>state.auth);
+
 
   const onSubmit = async (data) => {
-    try {
-      const response = await axios.post("YOUR_BACKEND_URL/signup", data);
-      if (response.data.success) {
-        navigation.navigate("OTP", { userId: response.data.userId });
+    dispatch(registerUser(data)).then((action) => {
+      if (registerUser.fulfilled.match(action)) {
+        // alert(action.payload.email)
+        navigation.navigate('otp', { user: action.payload.email })
       } else {
-        alert(response.data.message);
+        alert(action.payload);
       }
-    } catch (error) {
-      console.error(error);
-    }
+    });
   };
 
   return (
-    <ScrollView className="bg-white">
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <View style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
       <View className="bg-[#1b1534] h-full">
         <View className="flex-1 justify-start pt-10 px-8 bg-white rounded-t-3xl">
           <Text className="text-3xl font-bold mb-10 text-center">Signup</Text>
@@ -80,6 +84,8 @@ export default function RegisterScreen({ navigation }) {
                 Submit
               </Text>
             </TouchableOpacity>
+            {loading && <Text>Loading...</Text>}
+            {error && <Text>{error}</Text>}
           </View>
           <View className="flex flex-row w-full items-center justify-around">
             <StyledView className="h-0.5 bg-gray-300 flex-1 my-1" />
@@ -95,5 +101,7 @@ export default function RegisterScreen({ navigation }) {
         </View>
       </View>
     </ScrollView>
+    </View>
+    </TouchableWithoutFeedback>
   );
 }
