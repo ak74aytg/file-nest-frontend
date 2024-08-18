@@ -9,6 +9,7 @@ import { store } from "./redux/store/Store";
 import HomeScreen from "./src/screens/HomeScreen";
 import SplashScreen from "./src/screens/SplashScreen";
 
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -28,7 +29,7 @@ export default function App() {
                 </View>
               ),
               headerStyle: {
-                backgroundColor: "#1b1534",
+                backgroundColor: "#4682B4",
               },
               headerTitleAlign: "center",
             }}

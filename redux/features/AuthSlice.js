@@ -5,7 +5,7 @@ import { baseUrl } from "../../api/baseUrl";
 
 //Thunk for login user
 export const loginUser = createAsyncThunk("auth/loginUser",
-    async (loginData, { isRejectedWithValue }) => {
+    async (loginData, { rejectWithValue }) => {
         try {
           const response = await axios.post(
             `${baseUrl}/auth/v1/login`,
@@ -13,7 +13,7 @@ export const loginUser = createAsyncThunk("auth/loginUser",
           );
           return response.data;
         } catch (error) {
-          return isRejectedWithValue(error.response.data);
+          return rejectWithValue(error.response.data);
         }
     }
 );
@@ -22,7 +22,7 @@ export const loginUser = createAsyncThunk("auth/loginUser",
 
 // Thunk for register users
 export const registerUser = createAsyncThunk("auth/registerUser",
-async(registerData, {isRejectedWithValue})=>{
+async(registerData, {rejectWithValue})=>{
   try{
     const response = await axios.post(
       `${baseUrl}/auth/v1/register`,
@@ -30,21 +30,22 @@ async(registerData, {isRejectedWithValue})=>{
     );
     return response.data;
   }catch(error){
-    return isRejectedWithValue(error.response.data)
+    return rejectWithValue(error.response.data)
   }
 }
 );
 
 
 //Thunk for verifying user
-export const verifyUser = createAsyncThunk("auth/verifyUser", async(verifyData, {isRejectedWithValue})=>{
+export const verifyUser = createAsyncThunk("auth/verifyUser",
+   async(verifyData, {rejectWithValue})=>{
   try{
     const response = await axios.post(
       `${baseUrl}/auth/v1/verify-otp?email=${verifyData.email}&otp=${verifyData.otp}`
     );
     return response.data;
   }catch(error){
-    return isRejectedWithValue(error.response.data);
+    return rejectWithValue(error.response.data);
   }
 })
 
@@ -64,6 +65,9 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
     },
+    clearError: (state)=>{
+      state.error = null;
+    }
     },
     extraReducers: (builder) => {
         builder
@@ -108,5 +112,5 @@ const authSlice = createSlice({
 });
 
 
-export const { logout } = authSlice.actions;
+export const { logout, clearError } = authSlice.actions;
 export default authSlice.reducer;
