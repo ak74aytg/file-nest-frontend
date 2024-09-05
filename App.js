@@ -18,7 +18,7 @@ const Stack = createNativeStackNavigator();
 
 const HomeTabs = () => {
   return (
-    <Tab.Navigator initialRouteName="homeScreen">
+    <Tab.Navigator initialRouteName="upload">
       <Tab.Group screenOptions={{ headerShown: false }}>
         <Tab.Screen
           options={{

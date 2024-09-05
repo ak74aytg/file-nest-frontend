@@ -40,7 +40,7 @@ const Documents = () => {
 
   return (
     <View>
-      {data.map((file) => (
+      {data.reverse().map((file) => (
         <Document
           key={file.file_id}
           data={file}
