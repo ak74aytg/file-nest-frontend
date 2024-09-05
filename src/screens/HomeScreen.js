@@ -1,24 +1,42 @@
+import React, { useEffect, useState } from 'react';
+import { BackHandler, ScrollView, Text, ToastAndroid, View } from 'react-native';
+import HomeHeader from '../components/HomeHeader';
+import DonutChart from '../components/DonutChart';
+import SearchPanel from '../components/SearchPanel';
+import { useSelector } from 'react-redux';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Documents from '../components/Documents';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect } from 'react';
-import { BackHandler, Text, ToastAndroid, TouchableOpacity, View } from 'react-native';
+import axios from 'axios';
+import { baseUrl } from '../../api/baseUrl';
 
-export default function HomeScreen({ navigation }) {
-  const logout = async () => {
-    try {
-      await AsyncStorage.removeItem('userToken'); // Remove the token from AsyncStorage
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'login' }],
-      });
-    } catch (e) {
-      console.error("Failed to remove the token.");
-    }
-  };
+
+
+
+export default function HomeScreen({ navigation, route }) {
+  const { user } = useSelector((state) => state.auth);
+  const [currentUser, setCurrentUser] = useState(null);
+  useEffect(() => {
+    const checkLoginState = async () => {
+      try {
+        const userToken = await AsyncStorage.getItem("userToken");
+        const check = await axios.get(`${baseUrl}/test/welcome`, {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        });
+        setCurrentUser(check.data);
+      } catch (e) {
+        console.log(e);
+      }
+    };
+    checkLoginState();
+  }, []);
+
   
 
   useEffect(() => {
     const backAction = () => {
-      // Show toast or warning when back button is pressed
       ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT);
 
       // Handle double press to exit
@@ -43,11 +61,59 @@ export default function HomeScreen({ navigation }) {
     return () => backHandler.remove(); // Cleanup
   }, []);
 
+
+
+
+
+const data = [
+  {
+    name: "Videos",
+    population: 9,
+    color: "#f39c12",
+    legendFontColor: "#7F7F7F",
+    legendFontSize: 15,
+  },
+  {
+    name: "Images",
+    population: 4,
+    color: "#2980b9",
+    legendFontColor: "#7F7F7F",
+    legendFontSize: 15,
+  },
+  {
+    name: "PDFs",
+    population: 19,
+    color: "#2ecc71",
+    legendFontColor: "#7F7F7F",
+    legendFontSize: 15,
+  },
+  {
+    name: "Others",
+    population: 0,
+    color: "#d35400",
+    legendFontColor: "#7F7F7F",
+    legendFontSize: 15,
+  },
+];
+
+
+
+
+
   return (
-    <View>
-      {/* Your home screen content */}
-      <Text>hii there i using whatsapp!!</Text>
-      <TouchableOpacity onPress={logout}><Text classname="btn btn-blue">Logout</Text></TouchableOpacity>
-    </View>
+    <SafeAreaView>
+      <ScrollView>
+        <View className="bg-white">
+          <HomeHeader
+            user={currentUser ? currentUser : user}
+            navigation={navigation}
+          />
+          <DonutChart data={data} />
+          <SearchPanel />
+          <Text className="mx-3 text-lg mb-9">Your Files</Text>
+          <Documents />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

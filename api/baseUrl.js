@@ -1,1 +1,1 @@
-export const baseUrl = "http://192.168.31.228:8080/file-nest";
+export const baseUrl = "http://192.168.61.53:8080/file-nest";

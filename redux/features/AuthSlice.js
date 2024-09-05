@@ -56,6 +56,7 @@ const authSlice = createSlice({
   name: "auth",
   initialState: {
     user: null,
+    email:null,
     token: null,
     loading: false,
     error: null,
@@ -80,6 +81,7 @@ const authSlice = createSlice({
             state.loading = false;
             state.user = action.payload.username;
             state.token = action.payload.token;
+            state.email = action.payload.email;
           })
           .addCase(loginUser.rejected, (state, action) => {
             state.loading = false;
@@ -91,7 +93,6 @@ const authSlice = createSlice({
             state.error = null;
           }).addCase(registerUser.fulfilled, (state, action)=>{
             state.loading = false;
-            state.user = action.payload.email;
           }).addCase(registerUser.rejected, (state, action)=>{
             state.loading = false;
             state.error = action.payload;
@@ -104,6 +105,7 @@ const authSlice = createSlice({
             state.loading = false;
             state.user = action.payload.username;
             state.token = action.payload.token;
+            state.email = action.payload.email;
           }).addCase(verifyUser.rejected, (state, action)=>{
             state.loading = false;
             state.error = action.payload;

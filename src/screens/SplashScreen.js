@@ -1,4 +1,3 @@
-// src/screens/SplashScreen.js
 import React, { useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -15,10 +14,14 @@ export default function SplashScreen({ navigation }) {
             Authorization: `Bearer ${userToken}`,
           },
         });
-        if (userToken && check.status===200) {
+        if (userToken && check.status === 200) {
           navigation.reset({
             index: 0,
-            routes: [{ name: "home" }],
+            routes: [
+              {
+                name: "home",
+              },
+            ],
           });
         } else {
           navigation.reset({
@@ -27,6 +30,7 @@ export default function SplashScreen({ navigation }) {
           });
         }
       } catch (e) {
+        console.error("Error checking login state:", e);
         navigation.reset({
           index: 0,
           routes: [{ name: "login" }],
