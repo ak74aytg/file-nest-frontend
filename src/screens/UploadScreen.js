@@ -3,7 +3,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Button,
   Dimensions,
 } from "react-native";
 import React, { useState } from "react";
@@ -16,43 +15,54 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Alert from "../components/Alert";
 import Capsule from "../components/Capsule";
 import { taglist } from "../constants/tags";
+import { useDispatch } from "react-redux";
+import { docNotUpdated, docUpdated } from "../../redux/features/DocsSlice";
 
 const UploadScreen = () => {
   const [progress, setProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [uploadCompleted, setUploadCompleted] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState("success"); // Default status
+  const [uploadStatus, setUploadStatus] = useState("success");
   const { height } = Dimensions.get("window");
   const [fileUri, setFileUri] = useState(null);
   const [fileName, setFileName] = useState("");
+  const [fileType, setFileType] = useState("application/octet-stream");
   const [formData, setFormData] = useState(null);
-  const [fileExtension, setFileExtension] = useState(""); // To store the original file extension
+  const [fileExtension, setFileExtension] = useState("");
+  const [tags, setTags] = useState([]);
+  const dispatch = useDispatch();
 
   const pickFiles = async () => {
     let result = await DocumentPicker.getDocumentAsync({});
     if (result.canceled === false) {
-      // Extract the original file extension
       const originalFileName = result.assets[0].name;
       const extension = originalFileName.split(".").pop();
 
+
       setFileUri(result.assets[0].uri);
-      setFileName(originalFileName.replace(`.${extension}`, "")); // Remove extension for user input
-      setFileExtension(extension); // Store the original extension
-      setFormData(null); // Clear previous form data
+      setFileType(result.assets[0].mimeType);
+      setFileName(originalFileName.replace(`.${extension}`, ""));
+      setFileExtension(extension);
+      setFormData(null);
     } else {
       console.log("Document picking was canceled");
     }
   };
 
+  const handleUpdate = () => {
+    dispatch(docUpdated());
+  };
+
+
   const handleUpload = async () => {
     if (fileUri && fileName && fileExtension) {
-      // Create FormData with the correct MIME type
       const data = new FormData();
       data.append("file", {
         uri: fileUri,
-        type: "application/octet-stream", // Default MIME type; adjust if necessary
-        name: `${fileName}.${fileExtension}`, // Reattach the original extension
+        type: fileType,
+        name: `${fileName}.${fileExtension}`,
       });
+      data.append("tags", tags);
       setFormData(data);
 
       setUploading(true);
@@ -68,7 +78,6 @@ const UploadScreen = () => {
             const percentCompleted = Math.round(
               (progressEvent.loaded * 100) / progressEvent.total
             );
-            console.log(`Upload Progress: ${percentCompleted}%`);
             setProgress(percentCompleted / 100);
           },
         });
@@ -91,11 +100,26 @@ const UploadScreen = () => {
     } else {
       console.log("File URI, name, or extension is missing");
     }
-    setUploading(false)
+    setUploading(false);
   };
 
   const handleAlertClose = () => {
+    setTags([]);
+    setFileUri(null);
+    setFileName("");
+    setFileExtension("");
     setUploadCompleted(false);
+    handleUpdate();
+  };
+
+  const handleTagSelection = (tag) => {
+    setTags((prevTags) => {
+      if (prevTags.includes(tag)) {
+        return prevTags.filter((t) => t !== tag);
+      } else {
+        return [...prevTags, tag];
+      }
+    });
   };
 
   return (
@@ -105,21 +129,31 @@ const UploadScreen = () => {
         className={uploadCompleted ? "bg-slate-200" : "bg-white"}
       >
         {uploadCompleted && (
-          <Alert status={uploadStatus} onClose={handleAlertClose} />
+          <Alert
+            status={uploadStatus}
+            onClose={handleAlertClose}
+            error={"supported"}
+            success={"uploaded"}
+          />
         )}
-        <View className="mt-5" style={{ flex: 1, alignItems: "center" }}>
-          <View className="mt-8 mb-24">
+        <View className="" style={{ flex: 1, alignItems: "center" }}>
+          <View className="mt-5 mb-7">
             <Text className="text-center text-lg">
               Your file has been saved to the cloud.
             </Text>
             <Text>You can access your file anytime from your account.</Text>
           </View>
-          <View className="mb-10 w-80 h-40 p-8 border-dashed border">
+          <View className="mb-10 w-80 h-44 p-8 border-dashed border">
             <TouchableOpacity
               className="w-full h-full items-center"
               onPress={pickFiles}
             >
               <Icons name="upload" size={100} color={"blue"} />
+              <Text className="mt-3 text-lg font-bold">
+                {fileName
+                  ? fileName + "." + fileExtension
+                  : "click here to select document"}
+              </Text>
             </TouchableOpacity>
           </View>
           {uploading ? (
@@ -138,9 +172,9 @@ const UploadScreen = () => {
             <View className="w-full px-10"></View>
           )}
 
-          <View className="w-full px-16 ">
+          <View className="w-full px-11">
             <TextInput
-              className="h-10 bg-transparent"
+              className="h-10 bg-transparent text-center"
               value={fileName}
               onChangeText={(text) => {
                 setFileName(text);
@@ -148,16 +182,27 @@ const UploadScreen = () => {
               placeholder="title"
             />
           </View>
-          <View className='w-full pt-5 px-10 mb-5 bg-white h-52'>
-            <View className='bg-orange-50 w-full rounded-lg h-full flex flex-row flex-wrap p-2'>
-              {
-                taglist.map((tag) => {
-                  return <Capsule tag={tag} key={tag.tag} />;
-                })
-              }
-              </View>
+          <View
+            className={`w-full pt-5 px-8 mb-5 ${
+              uploadCompleted ? "bg-slate-200" : "bg-white"
+            }`}
+          >
+            <View
+              className={`${
+                uploadCompleted ? "bg-slate-300" : "bg-blue-50"
+              } w-full rounded-lg flex flex-row flex-wrap p-2`}
+            >
+              {taglist.map((tag) => (
+                <Capsule
+                  tag={tag}
+                  key={tag.tag}
+                  isSelected={tags.includes(tag.tag)} // Pass selected state
+                  handleTagSelection={handleTagSelection}
+                />
+              ))}
+            </View>
           </View>
-          <View className="w-48 mb-10">
+          <View className="w-48">
             <TouchableOpacity
               className="bg-blue-300 py-4 rounded-3xl"
               onPress={handleUpload}

@@ -12,13 +12,18 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import ShareScreen from "./src/screens/ShareScreen";
 import UploadScreen from "./src/screens/UploadScreen";
 import Icons from "react-native-vector-icons/FontAwesome";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import ProfileScreen from "./src/screens/ProfileScreen";
+
+
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+const queryClient = new QueryClient();
 
 const HomeTabs = () => {
   return (
-    <Tab.Navigator initialRouteName="upload">
+    <Tab.Navigator initialRouteName="homeScreen">
       <Tab.Group screenOptions={{ headerShown: false }}>
         <Tab.Screen
           options={{
@@ -88,7 +93,7 @@ const HomeTabs = () => {
             },
           }}
           name="setting"
-          component={UploadScreen}
+          component={ProfileScreen}
         />
       </Tab.Group>
     </Tab.Navigator>
@@ -98,40 +103,42 @@ const HomeTabs = () => {
 export default function App() {
   return (
     <Provider store={store}>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="splash">
-          <Stack.Screen
-            name="splash"
-            component={SplashScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Group
-            screenOptions={{
-              headerTitle: () => (
-                <View className="pt-24 pb-24">
-                  <Text className="text-white text-7xl">FileNest</Text>
-                  <Text className="text-white text-center text-lg">
-                    SCAN * STORE * ACCESS
-                  </Text>
-                </View>
-              ),
-              headerStyle: {
-                backgroundColor: "#4682B4",
-              },
-              headerTitleAlign: "center",
-            }}
-          >
-            <Stack.Screen name="login" component={LoginScreen} />
-            <Stack.Screen name="register" component={RegisterScreen} />
-            <Stack.Screen name="otp" component={OTPScreen} />
-          </Stack.Group>
-          <Stack.Screen
-            options={{ headerShown: false }}
-            name="home"
-            component={HomeTabs}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <QueryClientProvider client={queryClient}>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName="splash">
+            <Stack.Screen
+              name="splash"
+              component={SplashScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Group
+              screenOptions={{
+                headerTitle: () => (
+                  <View className="pt-24 pb-24">
+                    <Text className="text-white text-7xl">FileNest</Text>
+                    <Text className="text-white text-center text-lg">
+                      SCAN * STORE * ACCESS
+                    </Text>
+                  </View>
+                ),
+                headerStyle: {
+                  backgroundColor: "#4682B4",
+                },
+                headerTitleAlign: "center",
+              }}
+            >
+              <Stack.Screen name="login" component={LoginScreen} />
+              <Stack.Screen name="register" component={RegisterScreen} />
+              <Stack.Screen name="otp" component={OTPScreen} />
+            </Stack.Group>
+            <Stack.Screen
+              options={{ headerShown: false }}
+              name="home"
+              component={HomeTabs}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </QueryClientProvider>
     </Provider>
   );
 }

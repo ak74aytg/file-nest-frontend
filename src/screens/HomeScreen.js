@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BackHandler, ScrollView, Text, ToastAndroid, View } from 'react-native';
+import { BackHandler, FlatList, ScrollView, Text, ToastAndroid, View } from 'react-native';
 import HomeHeader from '../components/HomeHeader';
 import DonutChart from '../components/DonutChart';
 import SearchPanel from '../components/SearchPanel';
@@ -9,6 +9,8 @@ import Documents from '../components/Documents';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { baseUrl } from '../../api/baseUrl';
+import { useQuery } from '@tanstack/react-query';
+import { ActivityIndicator } from 'react-native-paper';
 
 
 
@@ -16,6 +18,25 @@ import { baseUrl } from '../../api/baseUrl';
 export default function HomeScreen({ navigation, route }) {
   const { user } = useSelector((state) => state.auth);
   const [currentUser, setCurrentUser] = useState(null);
+  const documentUpdateStatus = useSelector(
+    (state) => state.docs.documentUpdateStatus
+  );
+
+  const getAllTags = async () => {
+    try {
+      const userToken = await AsyncStorage.getItem("userToken");
+      const response = await axios.get(`${baseUrl}/documents/tags`, {
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      });
+      return response.data;
+    } catch (e) {
+      console.error(e);
+      throw new Error("Failed to fetch tags");
+    }
+  };
+
   useEffect(() => {
     const checkLoginState = async () => {
       try {
@@ -33,87 +54,110 @@ export default function HomeScreen({ navigation, route }) {
     checkLoginState();
   }, []);
 
-  
-
   useEffect(() => {
     const backAction = () => {
-      ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT);
+      ToastAndroid.show("Press back again to exit", ToastAndroid.SHORT);
 
-      // Handle double press to exit
       let backPressCount = 0;
-      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-        if (backPressCount < 1) {
-          backPressCount += 1;
-          setTimeout(() => { backPressCount = 0 }, 2000);
-          return true;
-        } else {
-          BackHandler.exitApp(); // Exit the app
-          return false;
+      const backHandler = BackHandler.addEventListener(
+        "hardwareBackPress",
+        () => {
+          if (backPressCount < 1) {
+            backPressCount += 1;
+            setTimeout(() => {
+              backPressCount = 0;
+            }, 2000);
+            return true;
+          } else {
+            BackHandler.exitApp();
+            return false;
+          }
         }
-      });
+      );
 
       return () => backHandler.remove();
     };
 
-    // Add back handler listener
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
 
-    return () => backHandler.remove(); // Cleanup
+    return () => backHandler.remove();
   }, []);
 
+  const {
+    data: tags,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["tags"],
+    queryFn: getAllTags,
+  });
+
+  useEffect(() => {
+    if (documentUpdateStatus) {
+      refetch();
+    }
+  }, [documentUpdateStatus, refetch]);
 
 
-
-
-const data = [
-  {
-    name: "Videos",
-    population: 9,
-    color: "#f39c12",
-    legendFontColor: "#7F7F7F",
-    legendFontSize: 15,
-  },
-  {
-    name: "Images",
-    population: 4,
-    color: "#2980b9",
-    legendFontColor: "#7F7F7F",
-    legendFontSize: 15,
-  },
-  {
-    name: "PDFs",
-    population: 19,
-    color: "#2ecc71",
-    legendFontColor: "#7F7F7F",
-    legendFontSize: 15,
-  },
-  {
-    name: "Others",
-    population: 0,
-    color: "#d35400",
-    legendFontColor: "#7F7F7F",
-    legendFontSize: 15,
-  },
-];
-
-
-
-
+  const data =
+    tags && tags.length > 0
+      ? tags.map((tag, index) => ({
+          name: tag.name,
+          population: tag.file_with_tag,
+          color: ["#f39c12", "#2980b9", "#2ecc71", "#d35400"][index % 4],
+          legendFontColor: "#7F7F7F",
+          legendFontSize: 15,
+        }))
+      : [
+          {
+            name: "scan",
+            population: 1,
+            color: "#f39c12",
+            legendFontColor: "#7f7f7f",
+            legendFontSize: 15,
+          },
+          {
+            name: "store",
+            population: 1,
+            color: "#2980b9",
+            legendFontColor: "#7f7f7f",
+            legendFontSize: 15,
+          },
+          {
+            name: "access",
+            population: 1,
+            color: "#2ecc71",
+            legendFontColor: "#7f7f7f",
+            legendFontSize: 15,
+          },
+        ];
 
   return (
     <SafeAreaView>
-      <ScrollView>
-        <View className="bg-white">
-          <HomeHeader
-            user={currentUser ? currentUser : user}
-            navigation={navigation}
-          />
-          <DonutChart data={data} />
-          <SearchPanel />
-          <Text className="mx-3 text-lg mb-9">Your Files</Text>
-          <Documents />
-        </View>
-      </ScrollView>
+      {/* Use FlatList and provide header and footer components */}
+      <FlatList
+        data={[]} // Empty data for FlatList, used for scrolling
+        ListHeaderComponent={
+          <View className="bg-white">
+            <HomeHeader
+              user={currentUser ? currentUser : user}
+              navigation={navigation}
+            />
+            {!isLoading && tags && <DonutChart data={data} />}
+            <SearchPanel />
+            <Text className="mx-3 text-lg mb-9">Your Files</Text>
+            <Documents navigation={navigation} />
+          </View>
+        }
+        // ListFooterComponent={<Documents navigation={navigation} />}
+        // ListEmptyComponent={
+        //   isLoading ? <ActivityIndicator size="large" /> : null
+        // }
+      />
     </SafeAreaView>
   );
 }
