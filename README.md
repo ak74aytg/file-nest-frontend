@@ -1,14 +1,5 @@
-<hr>
 
-<h2>Future Enhancements</h2>
-<ul>
-    <li>Add user roles (admin and regular users).</li>
-    <li>Integrate cloud storage (e.g., AWS S3) for file uploads.</li>
-    <li>Enhance file preview functionality.</li>
-    <li>Add support for more file types.</li>
-</ul>
 
-<hr>
 
 <h1>File Nest Frontend</h1>
 
@@ -84,5 +75,13 @@
 </ul>
 
 <hr>
+
+<h2>Future Enhancements</h2>
+<ul>
+    <li>Add user roles (admin and regular users).</li>
+    <li>Integrate cloud storage (e.g., AWS S3) for file uploads.</li>
+    <li>Enhance file preview functionality.</li>
+    <li>Add support for more file types.</li>
+</ul>
 
 <p>Feel free to reach out for any questions or contributions!</p>
